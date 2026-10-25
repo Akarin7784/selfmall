@@ -49,10 +49,32 @@ VITE_API_PROXY_TARGET=http://localhost:8080
 ## Mock 开关与规则
 
 - `apps/storefront/public/mockServiceWorker.js` 由 MSW **3.0.3** 生成（文件头 `PACKAGE_VERSION = '3.0.3'`，与 `apps/storefront/package.json` 的 `msw: ^3.0.3` 及 lockfile 一致）。升级 MSW 后必须在 `apps/storefront/` 下重新执行 `pnpm dlx msw init public/`（或 `pnpm exec msw init public/`）重新生成该文件，否则 worker 与库版本不匹配。
-- `VITE_ENABLE_MOCK=true` 时启动 MSW，默认关闭。handlers 在 `apps/storefront/src/mocks/handlers/`，FE-01 不含任何 mock。
-- 只 mock 后端尚未实现的接口；已实现接口（登录、订单试算等）失败时如实展示错误，不能用 mock 掩盖。
+- `VITE_ENABLE_MOCK=true` 时启动 MSW，默认关闭。handlers 在 `apps/storefront/src/mocks/handlers/`；目前只有 FE-09 的商品示例数据（见下节）。
+- 除经确认的示例数据（FE-09 商品列表/详情）外，只 mock 后端尚未实现的接口；已实现接口（登录、订单试算等）失败时如实展示错误，不能用 mock 掩盖。
 - **mock 必须显眼标注**：响应带 `X-Mock: true` 头，页面显示「MOCK 数据」徽标，不得冒充真实数据。
 - mock 字段只按后端已给出的字段或草案写，不自造字段名。
+
+## 示例数据（FE-09，非真实商品）
+
+开发演示用的电脑配件示例数据，**示例数据，非真实商品**：名称是通用类型描述（不含真实品牌、型号），价格是示例值，不是真实价格。
+
+### 怎么开启 mock
+
+```bash
+# 打开示例数据（只在本地开发时使用）
+VITE_ENABLE_MOCK=true pnpm dev
+```
+
+- **默认关闭**：不带该变量（或 `VITE_ENABLE_MOCK=false`，见 `apps/storefront/.env.example`）时直接 `pnpm dev`，不加载 MSW，前端经 Vite 代理（`/api` → `VITE_API_PROXY_TARGET`，默认 `http://localhost:8080`）连真实后端网关。
+- CI 与生产构建不开启（CI 显式设为 `false`）。开关判断用 `import.meta.env.VITE_ENABLE_MOCK` 字面量，构建时整段被摇掉，示例数据与 msw 不进生产包。
+
+### 范围与标注
+
+- 数据：`apps/storefront/src/mocks/fixtures/pcParts.ts`，27 条，覆盖 CPU、主板、内存、显卡、固态硬盘、电源、机箱、散热器、显示器 9 类；字段只有 `id`、`skuCode`（`MOCK-` 前缀）、`name`、`price`，不含 `imageUrl`、类目、总数、库存等草案字段，图片位用 CSS 占位块。
+- 只 mock `GET /api/products`（`page` 从 0、`size` 1–100，`data` 为数组、不带总数，越界页返回空数组）和 `GET /api/products/{id}`（不存在返回 404 `{"code":"HTTP_404","message":"商品不存在","data":null}`）。`price` 按后端真实形态以 JSON 数字字面量原文发出（如 `1299.00`），由 `@selfmall/api` 的金额预扫描保留为字符串。
+- 登录、订单试算、会员等其他请求不拦截（`onUnhandledFrame: 'bypass'`），照常经代理走真实后端；真实接口失败时如实显示错误态。
+- 每个 mock 响应带 `X-Mock: true`；列表页和详情页显示「MOCK 数据」徽标（含读屏文本），仅在开关打开时出现。
+- 示例数据只存在于前端，不进后端数据库。
 
 ## 响应式断点与导航
 
