@@ -13,6 +13,7 @@
 - MkDocs 文档站、开源贡献规范、Issue 模板和 MIT 许可证。
 - 前端工程骨架 `frontend/`（FE-01）：pnpm workspace、Vue 3 买家端占位、`@selfmall/api` 包骨架、ESLint/Prettier/Vitest 与 MSW 开关，不含业务页面。
 - 前端 CI `.github/workflows/frontend-ci.yml`（FE-02）：仅在 `frontend/**` 变更时运行，依次执行 install（frozen lockfile）、lint、typecheck、test、build，构建时强制关闭 MSW 示例数据。
+- 网关跨域（CORS）支持：来源、方法、请求头、暴露头、预检缓存和凭据均可通过 `mall.gateway.cors.*` 配置，默认只允许本地前端 `5173` 端口，禁止 `*` 通配；开启凭据时任何 `*` 均拒绝启动（BE-CORS）。
 
 ### Known limitations
 
