@@ -60,6 +60,21 @@ Content-Type: application/json
 
 数量范围 1–99，商品 ID 必须大于零。会员身份来自已验证的 JWT，单价通过商品服务查询，不接受客户端报价。未计优惠、运费、税费；不预占库存、不创建订单、不调用支付。
 
+## 跨域（CORS）
+
+网关在 Spring Security 过滤链上统一处理跨域，预检 `OPTIONS` 请求在鉴权之前返回，不需要令牌；实际请求仍按原有规则鉴权，受保护路径无令牌返回 401。不在白名单内的来源，响应不带 `Access-Control-Allow-Origin`（预检返回 403）。
+
+| 配置项 | 默认值 | 说明 |
+| --- | --- | --- |
+| `mall.gateway.cors.allowed-origins` | `http://localhost:5173`、`http://127.0.0.1:5173` | 允许来源，必须是完整来源；出现 `*`（含 `https://*.example.com`）时网关启动失败 |
+| `mall.gateway.cors.allowed-methods` | `GET,POST,PUT,PATCH,DELETE,OPTIONS` | 允许方法，不接受 `*` |
+| `mall.gateway.cors.allowed-headers` | `Authorization,Content-Type,Idempotency-Key` | 允许请求头，不接受 `*` |
+| `mall.gateway.cors.exposed-headers` | `Retry-After` | 浏览器可读取的响应头 |
+| `mall.gateway.cors.max-age` | `30m` | 预检缓存时间 |
+| `mall.gateway.cors.allow-credentials` | `false` | 令牌走 `Authorization` 头，不依赖 Cookie，默认关闭 |
+
+生产来源通过 Nacos（Group `SELF_MALL`，Data ID `mall-gateway.yml`）覆盖，示例见 `deploy/nacos/mall-gateway.yml`；也可用环境变量，例如 `MALL_GATEWAY_CORS_ALLOWED_ORIGINS=https://shop.example.com,https://admin.example.com`。本地开发也可以继续用 Vite 代理把 `/api` 转到 8080，同源访问不受 CORS 影响。
+
 ## 错误
 
 | 状态 | 常见原因 |

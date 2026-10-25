@@ -1,3 +1,9 @@
 # Import into Nacos, Group: SELF_MALL, Data ID: mall-gateway.yml
 mall:
   deployment: development
+  # 跨域白名单（BE-CORS）：生产环境改为实际前端域名，禁止使用 *
+  gateway:
+    cors:
+      allowed-origins:
+        - http://localhost:5173
+        - http://127.0.0.1:5173

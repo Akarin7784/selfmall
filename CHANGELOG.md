@@ -11,6 +11,7 @@
 - local/cloud 配置、Kustomize dev/prod、Docker 镜像与发布验证流程。
 - 独立数据库迁移、运维和回滚文档。
 - MkDocs 文档站、开源贡献规范、Issue 模板和 MIT 许可证。
+- 网关跨域（CORS）支持：来源、方法、请求头、暴露头、预检缓存和凭据均可通过 `mall.gateway.cors.*` 配置，默认只允许本地前端 `5173` 端口，禁止 `*` 通配（BE-CORS）。
 
 ### Known limitations
 
