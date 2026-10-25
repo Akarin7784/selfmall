@@ -2,7 +2,14 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory } from 'vue-router'
 import { VueQueryPlugin } from '@tanstack/vue-query'
 import { vi } from 'vitest'
-import { ApiError, type ApiClient, type ApiErrorKind, type Product } from '@selfmall/api'
+import { createPinia } from 'pinia'
+import {
+  ApiError,
+  createMemoryTokenStore,
+  type ApiClient,
+  type ApiErrorKind,
+  type Product,
+} from '@selfmall/api'
 import App from '@/App.vue'
 import { createAppRouter } from '@/router'
 import { API_CLIENT_KEY } from '@/api/client'
@@ -11,15 +18,19 @@ import { createQueryClient } from '@/api/query'
 export type FakeApi = ApiClient & {
   listProducts: ReturnType<typeof vi.fn>
   getProduct: ReturnType<typeof vi.fn>
+  login: ReturnType<typeof vi.fn>
+  logout: ReturnType<typeof vi.fn>
+  getCurrentMember: ReturnType<typeof vi.fn>
 }
 
 /** 假客户端：所有方法默认抛错，测试按需覆盖，绝不访问网络。 */
 export function createFakeApi(): FakeApi {
   const fail = () => Promise.reject(new Error('未在测试里配置'))
+  const tokenStore = createMemoryTokenStore()
   return {
-    tokenStore: { get: () => null, set: () => {}, clear: () => {} },
+    tokenStore,
     login: vi.fn(fail),
-    logout: vi.fn(),
+    logout: vi.fn(() => tokenStore.clear()),
     listProducts: vi.fn(fail),
     getProduct: vi.fn(fail),
     quoteOrder: vi.fn(fail),
@@ -50,7 +61,7 @@ export function makeProducts(count: number, start = 1): Product[] {
 }
 
 export async function mountAt(path: string, api: FakeApi) {
-  const router = createAppRouter(createMemoryHistory())
+  const router = createAppRouter(createMemoryHistory(), () => api.tokenStore.get() !== null)
   const queryClient = createQueryClient()
   queryClient.setDefaultOptions({
     queries: { ...queryClient.getDefaultOptions().queries, retryDelay: 0, gcTime: Infinity },
@@ -60,7 +71,7 @@ export async function mountAt(path: string, api: FakeApi) {
   const wrapper = mount(App, {
     attachTo: document.body,
     global: {
-      plugins: [router, [VueQueryPlugin, { queryClient }]],
+      plugins: [createPinia(), router, [VueQueryPlugin, { queryClient }]],
       provide: { [API_CLIENT_KEY as symbol]: api },
     },
   })

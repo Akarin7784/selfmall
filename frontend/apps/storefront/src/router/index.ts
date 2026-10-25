@@ -1,5 +1,7 @@
 import { nextTick } from 'vue'
 import { createRouter, createWebHistory, type Router, type RouterHistory } from 'vue-router'
+import { api } from '@/api/client'
+import { safeRedirect } from '@/session/redirect'
 
 export const SITE_NAME = 'SelfMall'
 
@@ -18,6 +20,18 @@ export const routes = [
     meta: { title: '商品详情' },
   },
   {
+    path: '/login',
+    name: 'login',
+    component: () => import('@/pages/auth/LoginPage.vue'),
+    meta: { title: '演示登录', guestOnly: true },
+  },
+  {
+    path: '/me',
+    name: 'me',
+    component: () => import('@/pages/auth/MePage.vue'),
+    meta: { title: '我的', requiresAuth: true },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     component: () => import('@/pages/NotFoundPage.vue'),
@@ -32,8 +46,24 @@ export function moveFocusToMain(): void {
   target?.focus({ preventScroll: true })
 }
 
-export function createAppRouter(history: RouterHistory = createWebHistory()): Router {
+/** 是否已登录：以 token store 为准（不解码 JWT）。 */
+export type IsAuthenticated = () => boolean
+
+export function createAppRouter(
+  history: RouterHistory = createWebHistory(),
+  isAuthenticated: IsAuthenticated = () => api.tokenStore.get() !== null,
+): Router {
   const r = createRouter({ history, routes, scrollBehavior: () => ({ top: 0 }) })
+  // 登录态守卫：需要登录的路由未登录 → /login?redirect=原页；已登录访问 /login → 回跳。
+  r.beforeEach((to) => {
+    if (to.meta.requiresAuth && !isAuthenticated()) {
+      return { name: 'login', query: { redirect: to.fullPath } }
+    }
+    if (to.meta.guestOnly && isAuthenticated()) {
+      return safeRedirect(to.query.redirect)
+    }
+    return true
+  })
   let first = true
   r.afterEach((to, _from, failure) => {
     if (failure) return
