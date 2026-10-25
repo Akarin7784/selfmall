@@ -1,0 +1,26 @@
+/*
+ * 响应式断点（移动优先）：
+ *   默认：手机（< 768px）
+ *   --bp-tablet：>= 768px 平板
+ *   --bp-desktop：>= 1200px PC
+ * CSS 自定义属性不能直接用在 @media 中，媒体查询请写字面量 768px / 1200px，
+ * 并与此处及 src/styles/breakpoints.ts 保持一致。
+ */
+:root {
+  --bp-tablet: 768px;
+  --bp-desktop: 1200px;
+  --page-padding: 12px;
+  --page-max-width: 100%;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --page-padding: 24px;
+  }
+}
+
+@media (min-width: 1200px) {
+  :root {
+    --page-max-width: 1200px;
+  }
+}
