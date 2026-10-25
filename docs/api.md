@@ -73,6 +73,12 @@ Content-Type: application/json
 | `mall.gateway.cors.max-age` | `30m` | 预检缓存时间 |
 | `mall.gateway.cors.allow-credentials` | `false` | 令牌走 `Authorization` 头，不依赖 Cookie，默认关闭 |
 
+启动校验（不满足时网关启动失败，错误信息指明具体配置项）：
+
+- `allowed-origins` 不能为空，也不能有空字符串或空白项；
+- `allowed-origins`、`allowed-methods`、`allowed-headers`、`exposed-headers` 都不能含 `*`；
+- `allow-credentials=true` 时，上述四项含 `*` 会单独报错，提示凭据与通配冲突。
+
 生产来源通过 Nacos（Group `SELF_MALL`，Data ID `mall-gateway.yml`）覆盖，示例见 `deploy/nacos/mall-gateway.yml`；也可用环境变量，例如 `MALL_GATEWAY_CORS_ALLOWED_ORIGINS=https://shop.example.com,https://admin.example.com`。本地开发也可以继续用 Vite 代理把 `/api` 转到 8080，同源访问不受 CORS 影响。
 
 ## 错误

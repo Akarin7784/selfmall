@@ -6,26 +6,29 @@ import java.io.IOException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.junit.jupiter.api.BeforeEach;
-import org.springframework.boot.test.web.server.LocalServerPort;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class GatewayCorsTest {
     static final MockWebServer upstream = new MockWebServer();
 
+    @BeforeAll
+    static void start() throws IOException { upstream.start(); }
+
     @DynamicPropertySource
-    static void props(DynamicPropertyRegistry r) throws IOException {
-        upstream.start();
-        String url = "http://localhost:" + upstream.getPort();
+    static void props(DynamicPropertyRegistry r) {
+        // 供应函数在上下文加载时才求值，此时 @BeforeAll 已启动上游
         String prefix = "spring.cloud.gateway.server.webflux.routes[0].";
         r.add(prefix + "id", () -> "mall-product");
-        r.add(prefix + "uri", () -> url);
+        r.add(prefix + "uri", () -> "http://localhost:" + upstream.getPort());
         r.add(prefix + "predicates[0]", () -> "Path=/api/products,/api/products/**");
     }
 

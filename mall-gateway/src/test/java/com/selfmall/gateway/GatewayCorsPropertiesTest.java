@@ -60,4 +60,38 @@ class GatewayCorsPropertiesTest {
             .run(ctx -> assertThat(ctx.getBean(GatewayCorsProperties.class).getAllowedOrigins())
                 .containsExactly("https://shop.example.com", "https://admin.example.com"));
     }
+
+    @Test
+    void blankOriginRejectedWithDedicatedMessage() {
+        runner.withPropertyValues("mall.gateway.cors.allowed-origins[0]=", "mall.gateway.cors.allowed-origins[1]=http://localhost:5173")
+            .run(ctx -> assertThat(ctx).hasFailed()
+                .getFailure().rootCause().hasMessageContaining("空字符串"));
+    }
+
+    @Test
+    void wildcardExposedHeaderRejected() {
+        runner.withPropertyValues("mall.gateway.cors.exposed-headers=*")
+            .run(ctx -> assertThat(ctx).hasFailed()
+                .getFailure().rootCause().hasMessageContaining("exposed-headers"));
+    }
+
+    @Test
+    void credentialsWithWildcardOriginRejected() {
+        runner.withPropertyValues("mall.gateway.cors.allow-credentials=true", "mall.gateway.cors.allowed-origins=*")
+            .run(ctx -> assertThat(ctx).hasFailed()
+                .getFailure().rootCause().hasMessageContaining("allow-credentials=true"));
+    }
+
+    @Test
+    void credentialsWithWildcardHeaderRejected() {
+        runner.withPropertyValues("mall.gateway.cors.allow-credentials=true", "mall.gateway.cors.allowed-headers=*")
+            .run(ctx -> assertThat(ctx).hasFailed()
+                .getFailure().rootCause().hasMessageContaining("allow-credentials=true"));
+    }
+
+    @Test
+    void credentialsWithExplicitValuesAccepted() {
+        runner.withPropertyValues("mall.gateway.cors.allow-credentials=true")
+            .run(ctx -> assertThat(ctx.getBean(GatewayCorsProperties.class).isAllowCredentials()).isTrue());
+    }
 }

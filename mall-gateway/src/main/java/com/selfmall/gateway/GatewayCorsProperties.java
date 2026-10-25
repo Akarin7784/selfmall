@@ -24,16 +24,39 @@ public class GatewayCorsProperties {
     private Duration maxAge = Duration.ofMinutes(30);
     private boolean allowCredentials = false;
 
-    @AssertTrue(message = "mall.gateway.cors.allowed-origins 不允许包含 * 通配，必须列出完整来源")
-    public boolean isOriginsWithoutWildcard() {
-        return allowedOrigins == null || allowedOrigins.stream()
-            .allMatch(o -> o != null && !o.isBlank() && !o.contains("*"));
+    @AssertTrue(message = "mall.gateway.cors.allowed-origins 不能包含空字符串或空白项")
+    public boolean isOriginsNotBlank() {
+        return allowedOrigins == null || allowedOrigins.stream().allMatch(o -> o != null && !o.isBlank());
     }
 
-    @AssertTrue(message = "mall.gateway.cors.allowed-headers / allowed-methods 不允许包含 *")
+    @AssertTrue(message = "mall.gateway.cors.allowed-origins 不允许包含 * 通配（含 https://*.example.com 这类模式），必须列出完整来源")
+    public boolean isOriginsWithoutWildcard() {
+        return !anyContainsWildcard(allowedOrigins);
+    }
+
+    @AssertTrue(message = "mall.gateway.cors.allowed-methods 不允许包含 *，请逐个列出方法")
+    public boolean isMethodsWithoutWildcard() {
+        return !anyContainsWildcard(allowedMethods);
+    }
+
+    @AssertTrue(message = "mall.gateway.cors.allowed-headers 不允许包含 *，请逐个列出请求头")
     public boolean isHeadersWithoutWildcard() {
-        return (allowedHeaders == null || !allowedHeaders.contains("*"))
-            && (allowedMethods == null || !allowedMethods.contains("*"));
+        return !anyContainsWildcard(allowedHeaders);
+    }
+
+    @AssertTrue(message = "mall.gateway.cors.exposed-headers 不允许包含 *，请逐个列出暴露头")
+    public boolean isExposedHeadersWithoutWildcard() {
+        return !anyContainsWildcard(exposedHeaders);
+    }
+
+    @AssertTrue(message = "mall.gateway.cors.allow-credentials=true 时，allowed-origins、allowed-methods、allowed-headers、exposed-headers 均不得包含 *")
+    public boolean isCredentialsWithoutWildcard() {
+        return !allowCredentials || !(anyContainsWildcard(allowedOrigins) || anyContainsWildcard(allowedMethods)
+            || anyContainsWildcard(allowedHeaders) || anyContainsWildcard(exposedHeaders));
+    }
+
+    private static boolean anyContainsWildcard(List<String> values) {
+        return values != null && values.stream().anyMatch(v -> v != null && v.contains("*"));
     }
 
     public List<String> getAllowedOrigins() { return allowedOrigins; }
