@@ -74,6 +74,7 @@ mall-common-*/         公共响应、安全和 Web 配置
 deploy/                Docker、K8S、中间件和监控配置
 scripts/               构建、启动、验证和迁移脚本
 docs/                  文档站 Markdown 源码
+frontend/              前端 pnpm workspace（见 frontend/README.md）
 ```
 
 ## 文档导航
