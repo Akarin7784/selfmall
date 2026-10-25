@@ -94,4 +94,27 @@ class GatewayCorsTest {
             .exchange()
             .expectStatus().isUnauthorized();
     }
+
+    @Test
+    void preflightWithDisallowedHeaderRejected() {
+        client.options().uri("/api/orders/quote")
+            .header(HttpHeaders.ORIGIN, "http://localhost:5173")
+            .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
+            .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "X-Evil-Header")
+            .exchange()
+            .expectStatus().isForbidden()
+            .expectHeader().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)
+            .expectHeader().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS);
+    }
+
+    @Test
+    void preflightWithDisallowedMethodRejected() {
+        client.options().uri("/api/orders/quote")
+            .header(HttpHeaders.ORIGIN, "http://localhost:5173")
+            .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "TRACE")
+            .exchange()
+            .expectStatus().isForbidden()
+            .expectHeader().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)
+            .expectHeader().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS);
+    }
 }

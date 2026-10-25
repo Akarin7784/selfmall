@@ -2,7 +2,10 @@ package com.selfmall.gateway;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.env.StandardEnvironment;
+import org.springframework.core.env.SystemEnvironmentPropertySource;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -45,5 +48,16 @@ class GatewayCorsPropertiesTest {
         runner.withPropertyValues("mall.gateway.cors.allowed-origins=https://shop.example.com")
             .run(ctx -> assertThat(ctx.getBean(GatewayCorsProperties.class).getAllowedOrigins())
                 .containsExactly("https://shop.example.com"));
+    }
+
+    @Test
+    void environmentVariableOverridesOrigins() {
+        // 模拟真实环境变量（relaxed binding），写法与 docs/api.md 一致
+        runner.withInitializer(ctx -> ctx.getEnvironment().getPropertySources().addAfter(
+                StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME,
+                new SystemEnvironmentPropertySource(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME + "-test",
+                    Map.of("MALL_GATEWAY_CORS_ALLOWED_ORIGINS", "https://shop.example.com,https://admin.example.com"))))
+            .run(ctx -> assertThat(ctx.getBean(GatewayCorsProperties.class).getAllowedOrigins())
+                .containsExactly("https://shop.example.com", "https://admin.example.com"));
     }
 }
