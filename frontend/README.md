@@ -152,6 +152,7 @@ export const api = createApiClient({
 ### 金额规则
 
 - 后端金额是 JSON 数字（如 `99.00`）。客户端在 `JSON.parse` 之前用字符串扫描器把金额字段的数字字面量原样包成字符串（`99.00` → `"99.00"`，`99.1` → `"99.1"`），已经是字符串的保持不变；扫描会跳过字符串字面量内部。默认字段 `price`、`unitPrice`、`totalAmount`，可用 `moneyFields` 配置。不依赖 `JSON.parse` reviver 的 `source` 参数（Node 20 不支持）。
+- 注意：金额扫描只按字段名匹配（默认 `price`、`unitPrice`、`totalAmount`），不看语义。将来新增金额字段，或出现同名但不是金额的字段，需要通过 `moneyFields` 配置调整，否则前者会按浮点数解析、后者会被误转成字符串。
 - 金额工具全部用字符串/BigInt：`isMoneyString`、`formatMoney`（规范为两位小数）、`compareMoney`、`addMoney`、`toCents`/`fromCents`。拒绝科学计数法、正号、空格和千分位；超过两位小数且多出部分非零时抛 `MoneyError`，不隐式舍入。
 - 总价以服务端 `totalAmount` 为准，前端不自己乘；`addMoney` 只用于展示性汇总。
 

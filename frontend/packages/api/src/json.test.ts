@@ -15,6 +15,16 @@ describe('无损 JSON 解析（验收 5）', () => {
     expect(parseJsonPreservingMoney('{"price":\n -0.50 }')).toEqual({ price: '-0.50' })
   })
 
+  it('大额数字原文保留，不经过浮点', () => {
+    expect(parseJsonPreservingMoney('{"price":12345678901.99}')).toEqual({
+      price: '12345678901.99',
+    })
+    // 超过 Number 安全整数精度：若经过浮点会变成 1.2345678901234568e+23
+    expect(parseJsonPreservingMoney('{"price":123456789012345678901234.50}')).toEqual({
+      price: '123456789012345678901234.50',
+    })
+  })
+
   it('已是字符串的金额原样保留', () => {
     expect(parseJsonPreservingMoney('{"price":"1299.00"}')).toEqual({ price: '1299.00' })
   })
