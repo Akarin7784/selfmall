@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { keepPreviousData, useQuery } from '@tanstack/vue-query'
 import { useApiClient } from '@/api/client'
 import ErrorState from '@/components/ErrorState.vue'
+import MockBadge from '@/components/MockBadge.vue'
 import ProductCard from '@/components/ProductCard.vue'
 import { hasNextPage, PAGE_SIZE, parsePageQuery } from './pagination'
 
@@ -41,6 +42,7 @@ function go(target: number): void {
 <template>
   <section class="page">
     <h1 class="page__title" tabindex="-1">商品列表</h1>
+    <MockBadge />
 
     <div
       v-if="showSkeleton"

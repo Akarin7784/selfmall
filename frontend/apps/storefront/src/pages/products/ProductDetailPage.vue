@@ -6,6 +6,7 @@ import { isApiError } from '@selfmall/api'
 import { useApiClient } from '@/api/client'
 import { displayPrice } from '@/api/price'
 import ErrorState from '@/components/ErrorState.vue'
+import MockBadge from '@/components/MockBadge.vue'
 
 const api = useApiClient()
 const route = useRoute()
@@ -37,6 +38,7 @@ const product = computed(() => query.data.value)
 <template>
   <section class="page">
     <RouterLink class="touch link back" :to="{ name: 'products' }">← 返回商品列表</RouterLink>
+    <MockBadge />
 
     <div v-if="notFound" class="state" role="status" data-test="not-found">
       <h1 class="page__title" tabindex="-1">商品不存在或已下架</h1>
