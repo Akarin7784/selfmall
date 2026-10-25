@@ -27,7 +27,7 @@ jobs:
       - run: python -m pip install -r scripts/requirements-k8s.txt
       - run: python scripts/validate-k8s.py
       - run: python scripts/smoke-test.py
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-jars
           path: mall-*/target/mall-*-0.1.0-SNAPSHOT.jar
@@ -89,7 +89,7 @@ jobs:
         run: |
           docker push "$IMAGE"
           docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE" > "mall-$SERVICE.digest.txt"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: image-${{ matrix.service }}
