@@ -12,6 +12,7 @@
 - 独立数据库迁移、运维和回滚文档。
 - MkDocs 文档站、开源贡献规范、Issue 模板和 MIT 许可证。
 - 前端工程骨架 `frontend/`（FE-01）：pnpm workspace、Vue 3 买家端占位、`@selfmall/api` 包骨架、ESLint/Prettier/Vitest 与 MSW 开关，不含业务页面。
+- 前端接口客户端 `@selfmall/api`（FE-03）：统一响应解包与 `ApiError` 错误分类（含非 JSON/框架错误、429 `Retry-After`）、401 清令牌回调、localStorage 令牌存储、金额无损解析与字符串金额工具。
 
 ### Known limitations
 
