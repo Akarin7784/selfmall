@@ -35,3 +35,7 @@ main 的文档更新通过 GitHub Actions 构建并部署到 GitHub Pages；PR �
 先明确服务边界、请求校验和失败语义，再实现持久化及事务。不要从客户端透传用户 ID 作为权限依据；金额使用 BigDecimal。新增数据库结构通过 Flyway 版本迁移交付，不修改已发布的 SQL。
 
 API 变化同时修改接口文档、测试及 CHANGELOG。未实现或未经验证的能力必须在文档中明确标注。
+
+## 前端 CI
+
+`frontend/**` 变更会触发 `.github/workflows/frontend-ci.yml`，在 `frontend/` 下依次执行 `pnpm install --frozen-lockfile`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm build`（Node 20.19.2，pnpm 版本取自 `package.json` 的 `packageManager`）。CI 构建固定 `VITE_ENABLE_MOCK=false`，示例数据只用于本地开发。提交前可在本地跑同样的命令。
