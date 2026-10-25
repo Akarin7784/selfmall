@@ -335,3 +335,79 @@ a {
 .auth__submit {
   width: 100%;
 }
+
+/*
+ * FE-06 主按钮主题色：全局覆盖 Element Plus 主色系列，使主按钮白字对比度 ≥ 4.5:1。
+ * 用 :root:root 提高优先级，保证覆盖按需加载的 Element Plus 组件样式里的 :root 变量。
+ * 数值与对比度计算见 src/styles/theme.ts 与 theme.test.ts。
+ */
+:root:root {
+  --el-color-primary: #1d4ed8;
+  --el-color-primary-light-3: #1e40af;
+  --el-color-primary-light-5: #6b7fc4;
+  --el-color-primary-light-7: #bfdbfe;
+  --el-color-primary-light-8: #dbeafe;
+  --el-color-primary-light-9: #eff6ff;
+  --el-color-primary-dark-2: #1e3a8a;
+}
+
+/* FE-06 订单试算 */
+.quote {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 8px;
+  background: #fff;
+}
+.quote__title {
+  margin: 0;
+  font-size: 1.125rem;
+}
+.quote__note {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+.stepper {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  max-width: 220px;
+}
+.stepper__btn {
+  font: inherit;
+  font-size: 1.25rem;
+  color: var(--color-text);
+  background: #fff;
+  border: 1px solid #8a919f;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.stepper__btn:disabled {
+  color: #8a919f;
+  cursor: not-allowed;
+}
+.stepper__input {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+.quote__submit {
+  align-self: flex-start;
+  min-width: 120px;
+}
+.quote__result {
+  margin: 0;
+}
+.quote__result dt {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+.quote__result dd {
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+}
+.quote__error {
+  color: #b91c1c;
+}

@@ -39,7 +39,7 @@ frontend/
 
 ## 开发代理
 
-网关暂无 CORS 配置（BE-CORS 处理中），开发期由 Vite 把 `/api` 转发到网关，默认 `http://localhost:8080`。
+网关已支持 CORS，默认只允许 `http://localhost:5173` 和 `http://127.0.0.1:5173`；开发期仍可用 Vite 代理把 `/api` 转发到网关，默认 `http://localhost:8080`。配置见 `docs/api.md`「跨域（CORS）」一节。
 可在 `apps/storefront/.env.local`（不入库，参考 `.env.example`）里覆盖：
 
 ```bash
@@ -91,18 +91,18 @@ VITE_ENABLE_MOCK=true pnpm dev
 
 ## 页面与路由（FE-04）
 
-| 路由               | 页面     | 说明                                                                       |
-| ------------------ | -------- | -------------------------------------------------------------------------- |
-| `/`                | —        | 重定向到 `/products`                                                       |
-| `/products?page=N` | 商品列表 | `GET /api/products`，每页 20 条；`page` 从 1 开始，对应接口 `page=N-1`     |
-| `/products/:id`    | 商品详情 | `GET /api/products/{id}`；id 不是正整数时直接显示「商品不存在」不发请求    |
-| `/login`           | 演示登录 | FE-05；`POST /api/auth/token`，支持 `?redirect=站内路径`；已登录访问会跳走 |
-| `/me`              | 我的     | FE-05；需要登录，显示登录状态、`memberId` 和「退出登录」                   |
-| 其他               | 404      | 「页面不存在」并给回商品列表的链接                                         |
+| 路由               | 页面     | 说明                                                                                                                |
+| ------------------ | -------- | ------------------------------------------------------------------------------------------------------------------- |
+| `/`                | —        | 重定向到 `/products`                                                                                                |
+| `/products?page=N` | 商品列表 | `GET /api/products`，每页 20 条；`page` 从 1 开始，对应接口 `page=N-1`                                              |
+| `/products/:id`    | 商品详情 | `GET /api/products/{id}`；id 不是正整数时直接显示「商品不存在」不发请求；FE-06 起含「价格试算」区，支持 `?qty=1–99` |
+| `/login`           | 演示登录 | FE-05；`POST /api/auth/token`，支持 `?redirect=站内路径`；已登录访问会跳走                                          |
+| `/me`              | 我的     | FE-05；需要登录，显示登录状态、`memberId` 和「退出登录」                                                            |
+| 其他               | 404      | 「页面不存在」并给回商品列表的链接                                                                                  |
 
-- 只展示接口已有的字段：`id`、`skuCode`、`name`、`price`。不展示库存、图片、描述、类目，图片位置是纯 CSS 占位块（`aria-hidden`）。没有「订单试算」入口（FE-06）。
+- 只展示接口已有的字段：`id`、`skuCode`、`name`、`price`。不展示库存、图片、描述、类目，图片位置是纯 CSS 占位块（`aria-hidden`）。订单试算见「订单试算（FE-06）」一节。
 - 分页：接口不返回总数，只有「上一页 / 下一页」。返回条数 < 20 视为最后一页；正好 20 条时下一页可点，下一页为空显示「这一页没有商品了」空态。URL 页码非整数、< 1 或 > 10001（接口上限 10000）时自动改写到合法范围。
-- 价格：`displayPrice()` 用 `formatMoney` 规范为两位小数加「¥」（`99.00` → `¥99.00`，`1299.5` → `¥1299.50`），全程字符串；超过两位小数的非法金额原样展示，不舍入。
+- 价格：`displayPrice()` 纯字符串补零到两位并加「¥」（`99.00` → `¥99.00`，`1299.5` → `¥1299.50`，`199` → `¥199.00`）；超过两位小数原样保留（`0.105` → `¥0.105`），不四舍五入、不截断；全程字符串/BigInt，不经浮点数；非法金额原样展示。
 - 数据层：`@tanstack/vue-query`，默认配置在 `src/api/query.ts`：network/timeout/server-error/service-unavailable 最多重试 1 次，其余（4xx、429、invalid-response）不重试；列表用 `keepPreviousData`，翻页时保留上一页内容直到新数据到达。
 - 客户端单例 `src/api/client.ts`（baseUrl `/api`），通过 `installApiClient(app)` provide，组件里 `useApiClient()` 获取；测试注入假客户端。`onUnauthorized` 在 FE-05 接线，见「登录与会话」。
 
@@ -135,11 +135,21 @@ VITE_ENABLE_MOCK=true pnpm dev
 - **demo 密码**：由后端环境变量配置，**请向后端维护者索取**；代码和文档里不写密码，登录页不预填。
 - **令牌存储**：沿用 `@selfmall/api` 的 token store，只存 `localStorage`，key 为 `selfmall.accessToken`；不打日志。密码只在提交时传给接口，不存储、不进 Pinia、不进日志或错误信息。前端不解码 JWT，身份与权限以后端为准。
 - **会话 store**（`src/session/store.ts`，Pinia）：`isLoggedIn` 以 token store 为准，`login()`、`logout()`；退出清令牌并回到登录页。
-- **路由守卫**：`meta.requiresAuth` 的路由（目前只有 `/me`）未登录时跳 `/login?redirect=原页`，登录成功回原页；`redirect` 只接受站内路径（单个 `/` 开头，拒绝 `//`、反斜杠、协议、控制字符及其百分号编码形式，见 `src/session/redirect.ts`），非法时回 `/products`。已登录访问 `/login` 直接跳走。商品页保持公开。
+- **路由守卫**：`meta.requiresAuth` 的路由（目前只有 `/me`）未登录时跳 `/login?redirect=原页`，登录成功回原页；`redirect` 只接受站内路径（单个 `/` 开头，拒绝 `//`、反斜杠、协议、路径首段含冒号（如 `/javascript:x`，FE-06 收紧）、控制字符及其百分号编码形式，见 `src/session/redirect.ts`），非法时回 `/products`。已登录访问 `/login` 直接跳走。商品页保持公开。
 - **过期处理**：令牌有效期 3600 秒，没有刷新令牌。过期后受保护接口由网关返回 401，客户端先清令牌，再经 `onUnauthorized`（`src/api/client.ts` → `src/session/unauthorized.ts` → `App.vue`）同步会话并跳 `/login?redirect=当前路径&reason=expired`，登录页显示「登录已过期，请重新登录」（`role="status"`）。并发多个 401 只跳一次，已在登录页不重复跳。登录接口本身的 401（用户名或密码错误）不清令牌、不跳转。
 - **错误文案**：401 用户名或密码错误；400 请填写用户名和密码（前端也做空值校验）；429 尝试过于频繁，请 N 秒后重试（`Retry-After`）；网络/超时 网络异常，请检查网络后重试；5xx/503 登录服务暂时不可用；其他 登录失败。错误用 `role="alert"` + `aria-live` 播报并获得焦点。
 - **导航**：未登录时顶部导航和手机底部栏显示「登录」，已登录显示「我的」。
 - **mock 与登录**：`VITE_ENABLE_MOCK=true` 时 MSW 只拦商品接口，**登录请求仍经 Vite 代理到真实后端**（`VITE_API_PROXY_TARGET`，默认 `http://localhost:8080`）。本地没有起后端时，开了 mock 也登录不了（显示网络或服务错误），这是预期行为，不是页面坏了。
+
+## 订单试算（FE-06）
+
+- **范围**：商品详情页的「价格试算」区只对接 `POST /api/orders/quote`（请求 `{productId, quantity}`，响应 `data` 为 `{memberId, productId, quantity, unitPrice, totalAmount}`），走真实接口，**不 mock**。仅试算价格：不创建订单、不预占库存，未计优惠、运费、税费。不含购物车、下单、收银台（FE-07）。
+- **需要登录**：未登录点「试算」跳 `/login?redirect=/products/:id?qty=N`，登录后回到该商品页并恢复数量，**不自动发起试算**，由用户再点。`qty` 只接受 1–99 的整数字符串（`^[1-9][0-9]?$`），其他（`0`、`100`、`1.5`、` 2`、`02`、`1e1`、数组形式、超长串等）一律回退为 1。试算时令牌过期（401）走 `onUnauthorized` 跳登录页。
+- **数量**：步进器 + 输入框，1–99 整数，前端校验后才发请求；数量改动立即清掉旧结果；重复点击在请求中被忽略，数量变化后晚到的旧响应丢弃，只展示最新一次。
+- **金额按服务端原文**：`unitPrice`、`totalAmount` 由 `@selfmall/api` 无损保留为字符串，经 `displayPrice()` 纯字符串补零到两位（`99.5` → `¥99.50`、`199` → `¥199.00`），超过两位保留，不四舍五入、不截断；前端不做浮点运算、不自己乘合计，合计以服务端 `totalAmount` 为准。试算失败（含商品下架/不存在）如实显示错误，不用详情页价格兜底计算。
+- **错误文案**：400 试算参数不合法；404 商品不存在或已下架，无法试算；429 请求过于频繁，请 N 秒后重试（`Retry-After`，网关目前未限流）；网络/超时 网络异常，可重试；503 服务暂时不可用，可重试；其他 5xx 服务器出错了，可重试；其他 试算失败。错误 `role="alert"` 并获得焦点；试算中按钮禁用，`role="status"` 播报「正在试算…/试算完成/试算失败」，结果区 `aria-live="polite"`。
+- **mock 与试算**：`VITE_ENABLE_MOCK=true` 时 MSW 不拦 `/api/orders/quote`（`passthrough.test.ts` 断言），试算仍经 Vite 代理到真实后端，**需要真实后端和登录**；没起后端时会显示网络或服务错误，这是预期行为。
+- **主题色**：`src/styles/main.css` 用 `:root:root` 全局覆盖 Element Plus `--el-color-primary` 系列为 `#1d4ed8`（hover `#1e40af`、active `#1e3a8a`），主按钮白字对比度 6.70:1 / 8.72:1 / 10.36:1（WCAG 相对亮度公式，见 `src/styles/theme.test.ts`）；禁用态 `#6b7fc4` 为 3.85:1，WCAG 对禁用控件不作要求。
 
 ## 接口客户端 `@selfmall/api`
 

@@ -7,6 +7,7 @@ import { useApiClient } from '@/api/client'
 import { displayPrice } from '@/api/price'
 import ErrorState from '@/components/ErrorState.vue'
 import MockBadge from '@/components/MockBadge.vue'
+import QuotePanel from '@/quote/QuotePanel.vue'
 
 const api = useApiClient()
 const route = useRoute()
@@ -83,6 +84,7 @@ const product = computed(() => query.data.value)
           <dd data-test="id">{{ product.id }}</dd>
         </dl>
       </div>
+      <QuotePanel v-if="product" :key="product.id" :product-id="product.id" />
     </template>
   </section>
 </template>

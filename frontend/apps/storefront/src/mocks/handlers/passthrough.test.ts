@@ -18,6 +18,15 @@ describe('mock 不拦截登录与受保护接口', () => {
     expect(await getResponse(handlers, req)).toBeUndefined()
   })
 
+  it('FE-06：带 Bearer 与真实请求体的试算请求同样放行到真实后端', async () => {
+    const req = new Request('http://localhost:5173/api/orders/quote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer fake-test-token' },
+      body: JSON.stringify({ productId: 1, quantity: 2 }),
+    })
+    expect(await getResponse(handlers, req)).toBeUndefined()
+  })
+
   it('商品接口仍由 mock 处理（对照）', async () => {
     const res = await getResponse(
       handlers,

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createFakeApi, makeProducts, mountAt, settle } from '@/test/harness'
 import { BREAKPOINTS } from '@/styles/breakpoints'
 import { shouldRetry } from '@/api/query'
@@ -45,8 +45,9 @@ describe('路由与布局', () => {
     const { wrapper } = await mountAt('/products', api)
     await settle()
     await wrapper.get('[data-test="product-card"]').trigger('click')
+    // 详情页为懒加载路由（FE-06 起含试算组件），固定轮数 settle 不足以等到导航完成
+    await vi.waitFor(() => expect(document.title).toBe('商品详情 - SelfMall'))
     await settle()
-    expect(document.title).toBe('商品详情 - SelfMall')
     expect(document.activeElement?.tagName).toBe('H1')
   })
 })
@@ -68,5 +69,18 @@ describe('辅助逻辑', () => {
     expect(displayPrice('99.00')).toBe('¥99.00')
     expect(displayPrice('1299.5')).toBe('¥1299.50')
     expect(displayPrice('0.105')).toBe('¥0.105')
+    // FE-06 口径：纯字符串补零到两位，超过两位原样保留，不四舍五入、不截断
+    expect(displayPrice('199')).toBe('¥199.00')
+    expect(displayPrice('99.5')).toBe('¥99.50')
+    expect(displayPrice('99.55')).toBe('¥99.55')
+    expect(displayPrice('1.000')).toBe('¥1.000')
+    expect(displayPrice('9.999')).toBe('¥9.999')
+    expect(displayPrice('123456789012345678901')).toBe('¥123456789012345678901.00')
+    expect(displayPrice('123456789012345678901.5')).toBe('¥123456789012345678901.50')
+    // 既有处理：前导零规范、负数、非法串原样
+    expect(displayPrice('007.5')).toBe('¥7.50')
+    expect(displayPrice('-3.5')).toBe('¥-3.50')
+    expect(displayPrice('1e3')).toBe('¥1e3')
+    expect(displayPrice('abc')).toBe('¥abc')
   })
 })

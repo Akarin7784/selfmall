@@ -20,6 +20,7 @@ export type FakeApi = ApiClient & {
   getProduct: ReturnType<typeof vi.fn>
   login: ReturnType<typeof vi.fn>
   logout: ReturnType<typeof vi.fn>
+  quoteOrder: ReturnType<typeof vi.fn>
   getCurrentMember: ReturnType<typeof vi.fn>
 }
 
