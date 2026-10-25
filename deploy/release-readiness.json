@@ -1,0 +1,13 @@
+{
+  "releaseCommit": "REPLACE_WITH_TESTED_COMMIT_SHA",
+  "checks": {
+    "realIdentityAndAuthorization": {"passed": false, "evidence": ""},
+    "orderInventoryPaymentAcceptance": {"passed": false, "evidence": ""},
+    "vulnerabilityScanAllSevenImages": {"passed": false, "evidence": ""},
+    "databaseMigrationAndRestoreDrill": {"passed": false, "evidence": ""},
+    "loadAndFailureTesting": {"passed": false, "evidence": ""},
+    "tlsSecretsAndNetworkPolicies": {"passed": false, "evidence": ""},
+    "monitoringAlertsAndOnCall": {"passed": false, "evidence": ""},
+    "stagingAcceptanceAndRollback": {"passed": false, "evidence": ""}
+  }
+}

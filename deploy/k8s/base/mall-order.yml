@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mall-order
+  labels:
+    app.kubernetes.io/name: mall-order
+    app.kubernetes.io/part-of: selfmall
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  minReadySeconds: 10
+  progressDeadlineSeconds: 600
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mall-order
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mall-order
+        app.kubernetes.io/part-of: selfmall
+    spec:
+      automountServiceAccountToken: false
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: mall-order
+      terminationGracePeriodSeconds: 45
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: app
+          image: selfmall/mall-order:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: mall-runtime
+            - configMapRef:
+                name: mall-infrastructure
+            - secretRef:
+                name: mall-common-secrets
+          resources:
+            requests:
+              cpu: 250m
+              memory: 384Mi
+            limits:
+              cpu: '1'
+              memory: 768Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          lifecycle:
+            preStop:
+              exec:
+                command: [sh, -c, sleep 10]
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+            - name: client-home
+              mountPath: /home/mall
+      volumes:
+        - name: config
+          configMap:
+            name: mall-application
+        - name: tmp
+          emptyDir:
+            sizeLimit: 256Mi
+        - name: client-home
+          emptyDir:
+            sizeLimit: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mall-order
+  labels:
+    app.kubernetes.io/name: mall-order
+    app.kubernetes.io/part-of: selfmall
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: mall-order
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

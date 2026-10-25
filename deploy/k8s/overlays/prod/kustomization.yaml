@@ -1,0 +1,65 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: selfmall-prod
+resources:
+  - ../../base
+  - namespace.yml
+  - availability.yml
+  - ingress.yml
+  - network-policy.yml
+  - resource-budget.yml
+configMapGenerator:
+  - name: mall-runtime
+    behavior: merge
+    literals:
+      - LOGGING_STRUCTURED_FORMAT_CONSOLE=ecs
+  - name: mall-infrastructure
+    envs: [infrastructure.env]
+images:
+  - name: selfmall/mall-gateway
+    newName: selfmall/mall-gateway
+    newTag: "0.1.0"
+  - name: selfmall/mall-auth
+    newName: selfmall/mall-auth
+    newTag: "0.1.0"
+  - name: selfmall/mall-product
+    newName: selfmall/mall-product
+    newTag: "0.1.0"
+  - name: selfmall/mall-inventory
+    newName: selfmall/mall-inventory
+    newTag: "0.1.0"
+  - name: selfmall/mall-order
+    newName: selfmall/mall-order
+    newTag: "0.1.0"
+  - name: selfmall/mall-member
+    newName: selfmall/mall-member
+    newTag: "0.1.0"
+  - name: selfmall/mall-payment
+    newName: selfmall/mall-payment
+    newTag: "0.1.0"
+patches:
+  - target:
+      kind: Deployment
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2
+      - op: add
+        path: /spec/template/spec/imagePullSecrets
+        value:
+          - name: mall-registry
+  - target:
+      kind: Deployment
+      name: mall-(gateway|product|order)
+    patch: |-
+      - op: remove
+        path: /spec/replicas
+  - target:
+      kind: Deployment
+      name: mall-product
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SPRING_FLYWAY_ENABLED
+          value: 'false'

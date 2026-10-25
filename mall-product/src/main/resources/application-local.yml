@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:mall_product;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password: ""
+  flyway:
+    locations: classpath:db/migration,classpath:db/local
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+        import-check:
+          enabled: false
+    sentinel:
+      enabled: false
+mall:
+  security:
+    jwt-secret: ${MALL_JWT_SECRET:local-demo-only-change-this-secret-32-bytes}

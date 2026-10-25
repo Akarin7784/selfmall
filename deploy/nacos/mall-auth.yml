@@ -1,0 +1,3 @@
+# Import into Nacos, Group: SELF_MALL, Data ID: mall-auth.yml
+mall:
+  deployment: development

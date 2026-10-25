@@ -1,0 +1,33 @@
+server:
+  port: ${SERVER_PORT:9003}
+  error:
+    include-message: never
+spring:
+  application:
+    name: mall-order
+  profiles:
+    default: local
+  threads:
+    virtual:
+      enabled: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+mall:
+  security:
+    issuer: selfmall
+    jwt-secret: ${MALL_JWT_SECRET}
+seata:
+  enabled: false
+
+
+spring.cloud.openfeign.client.config.default:
+  connectTimeout: 2000
+  readTimeout: 3000

@@ -1,0 +1,6 @@
+**
+!mall-*/
+!mall-*/target/
+!mall-*/target/mall-*-0.1.0-SNAPSHOT.jar
+!deploy/
+!deploy/Dockerfile

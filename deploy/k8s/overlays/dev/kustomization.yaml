@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: selfmall-dev
+resources:
+  - ../../base
+  - namespace.yml
+configMapGenerator:
+  - name: mall-infrastructure
+    envs: [infrastructure.env]
+images:
+  - name: selfmall/mall-gateway
+    newName: selfmall/mall-gateway
+    newTag: "0.1.0"
+  - name: selfmall/mall-auth
+    newName: selfmall/mall-auth
+    newTag: "0.1.0"
+  - name: selfmall/mall-product
+    newName: selfmall/mall-product
+    newTag: "0.1.0"
+  - name: selfmall/mall-inventory
+    newName: selfmall/mall-inventory
+    newTag: "0.1.0"
+  - name: selfmall/mall-order
+    newName: selfmall/mall-order
+    newTag: "0.1.0"
+  - name: selfmall/mall-member
+    newName: selfmall/mall-member
+    newTag: "0.1.0"
+  - name: selfmall/mall-payment
+    newName: selfmall/mall-payment
+    newTag: "0.1.0"

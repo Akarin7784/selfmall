@@ -1,0 +1,87 @@
+# Requires a NetworkPolicy-capable CNI. Egress is deliberately not isolated:
+# fill in actual middleware networks before adding egress restrictions.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ingress-to-gateway
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: mall-gateway
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: controller
+      ports:
+        - protocol: TCP
+          port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gateway-to-services
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: selfmall
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: mall-gateway
+      ports:
+        - protocol: TCP
+          port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: order-to-product
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: mall-product
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: mall-order
+      ports:
+        - protocol: TCP
+          port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sentinel-to-clients
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: selfmall
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: infrastructure
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: sentinel
+      ports:
+        - protocol: TCP
+          port: 8719

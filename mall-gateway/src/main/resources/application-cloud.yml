@@ -1,0 +1,48 @@
+spring:
+  config:
+    import: "nacos:${spring.application.name}.yml?group=SELF_MALL"
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: mall-auth
+              uri: lb://mall-auth
+              predicates:
+                - Path=/api/auth,/api/auth/**
+            - id: mall-product
+              uri: lb://mall-product
+              predicates:
+                - Path=/api/products,/api/products/**
+            - id: mall-inventory
+              uri: lb://mall-inventory
+              predicates:
+                - Path=/api/inventory,/api/inventory/**
+            - id: mall-order
+              uri: lb://mall-order
+              predicates:
+                - Path=/api/orders,/api/orders/**
+            - id: mall-member
+              uri: lb://mall-member
+              predicates:
+                - Path=/api/members,/api/members/**
+            - id: mall-payment
+              uri: lb://mall-payment
+              predicates:
+                - Path=/api/payments,/api/payments/**
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:}
+        group: SELF_MALL
+        username: ${NACOS_USERNAME}
+        password: ${NACOS_PASSWORD}
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:}
+        username: ${NACOS_USERNAME}
+        password: ${NACOS_PASSWORD}
+        group: SELF_MALL
+    sentinel:
+      transport:
+        dashboard: ${SENTINEL_DASHBOARD:localhost:8858}

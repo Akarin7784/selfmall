@@ -1,0 +1,14 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+        import-check:
+          enabled: false
+    sentinel:
+      enabled: false
+mall:
+  security:
+    jwt-secret: ${MALL_JWT_SECRET:local-demo-only-change-this-secret-32-bytes}

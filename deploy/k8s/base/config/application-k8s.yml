@@ -1,0 +1,30 @@
+# Loaded after application-cloud.yml. Kubernetes Services own routing/readiness.
+spring:
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: mall-auth
+              uri: http://mall-auth:8080
+              predicates: ["Path=/api/auth,/api/auth/**"]
+            - id: mall-product
+              uri: http://mall-product:8080
+              predicates: ["Path=/api/products,/api/products/**"]
+            - id: mall-inventory
+              uri: http://mall-inventory:8080
+              predicates: ["Path=/api/inventory,/api/inventory/**"]
+            - id: mall-order
+              uri: http://mall-order:8080
+              predicates: ["Path=/api/orders,/api/orders/**"]
+            - id: mall-member
+              uri: http://mall-member:8080
+              predicates: ["Path=/api/members,/api/members/**"]
+            - id: mall-payment
+              uri: http://mall-payment:8080
+              predicates: ["Path=/api/payments,/api/payments/**"]
+mall-clients:
+  product-url: http://mall-product:8080

@@ -1,0 +1,37 @@
+# Standard Prometheus rules, not a CRD. Load using rule_files in your existing
+# Prometheus. Requires kube-state-metrics and kubelet/cAdvisor scraping.
+groups:
+  - name: selfmall-kubernetes
+    rules:
+      - alert: SelfMallDeploymentUnavailable
+        expr: kube_deployment_status_replicas_available{namespace="selfmall-prod"} < kube_deployment_spec_replicas{namespace="selfmall-prod"}
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'SelfMall deployment {{ $labels.deployment }} has unavailable replicas'
+          description: 'Check rollout, pod events, readiness and middleware connectivity before restarting.'
+      - alert: SelfMallPodRestarting
+        expr: increase(kube_pod_container_status_restarts_total{namespace="selfmall-prod",container="app"}[10m]) >= 3
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'SelfMall pod {{ $labels.pod }} is repeatedly restarting'
+          description: 'Inspect previous container logs and exit reason; check memory and liveness failures.'
+      - alert: SelfMallMemoryNearLimit
+        expr: sum by (namespace,pod) (container_memory_working_set_bytes{namespace="selfmall-prod",container="app"}) / sum by (namespace,pod) (kube_pod_container_resource_limits{namespace="selfmall-prod",container="app",resource="memory"}) > 0.9
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'SelfMall pod {{ $labels.pod }} memory usage exceeds 90% of its limit'
+          description: 'Investigate heap/native memory and load before changing limits.'
+      - alert: SelfMallMetricsMissing
+        expr: absent(kube_deployment_spec_replicas{namespace="selfmall-prod",deployment="mall-gateway"})
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'SelfMall gateway deployment metrics are missing'
+          description: 'Check kube-state-metrics scrape, namespace labels and whether the deployment still exists.'

@@ -1,0 +1,42 @@
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: mall-auth
+              uri: http://localhost:9000
+              predicates:
+                - Path=/api/auth,/api/auth/**
+            - id: mall-product
+              uri: http://localhost:9001
+              predicates:
+                - Path=/api/products,/api/products/**
+            - id: mall-inventory
+              uri: http://localhost:9002
+              predicates:
+                - Path=/api/inventory,/api/inventory/**
+            - id: mall-order
+              uri: http://localhost:9003
+              predicates:
+                - Path=/api/orders,/api/orders/**
+            - id: mall-member
+              uri: http://localhost:9004
+              predicates:
+                - Path=/api/members,/api/members/**
+            - id: mall-payment
+              uri: http://localhost:9005
+              predicates:
+                - Path=/api/payments,/api/payments/**
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+        import-check:
+          enabled: false
+    sentinel:
+      enabled: false
+mall:
+  security:
+    jwt-secret: ${MALL_JWT_SECRET:local-demo-only-change-this-secret-32-bytes}
