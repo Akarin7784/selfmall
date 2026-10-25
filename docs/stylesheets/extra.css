@@ -1,0 +1,8 @@
+:root { --bs-primary: #2563eb; }
+body { font-family: system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; line-height: 1.75; }
+h1, h2, h3 { letter-spacing: -.025em; }
+h1 { margin-bottom: 1.2rem; }
+pre { border-radius: .5rem; }
+blockquote { border-left: 4px solid #2563eb; padding: .7rem 1rem; background: rgba(37,99,235,.06); }
+table { font-size: .95rem; }
+.navbar { box-shadow: 0 1px 8px rgba(0,0,0,.12); }

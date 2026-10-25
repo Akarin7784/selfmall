@@ -1,6 +1,6 @@
 # 安全维护
 
-真实凭据只通过 Secret 管理系统注入。请勿在公开 Issue 中提交密钥、用户数据或漏洞利用细节；通过团队私密渠道联系维护者（远端仓库建立后由管理员配置安全报告入口）。
+真实凭据只通过 Secret 管理系统注入。请勿在公开 Issue 中提交密钥、用户数据或漏洞利用细节。优先使用 GitHub 的 [私密漏洞报告入口](https://github.com/Akarin7784/selfmall/security/advisories/new)；如入口不可用，请先联系维护者建立私密沟通渠道，不要转为公开披露敏感信息。
 
 main 的发布制品须通过漏洞扫描。Spring Boot、Spring Cloud、Spring Cloud Alibaba 的版本必须按兼容矩阵一起评估，Dependabot PR 不能不经验证直接合入。
 

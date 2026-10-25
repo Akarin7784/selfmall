@@ -1,0 +1,42 @@
+site_name: SelfMall
+site_description: Spring Cloud Alibaba 自营电商后端开发框架
+site_url: https://akarin7784.github.io/selfmall/
+repo_url: https://github.com/Akarin7784/selfmall
+repo_name: Akarin7784/selfmall
+edit_uri: edit/develop/docs/
+copyright: Copyright © 2026 SelfMall contributors · MIT License
+theme:
+  name: mkdocs
+  locale: zh_CN
+  color_mode: auto
+  user_color_mode_toggle: true
+  navigation_depth: 2
+nav:
+  - 首页: index.md
+  - 开始使用:
+      - 快速开始: getting-started.md
+      - 架构与模块: architecture.md
+      - 接口参考: api.md
+      - 配置参考: configuration.md
+  - 部署与运维:
+      - 中间件开发: middleware.md
+      - Kubernetes: kubernetes.md
+      - 发布与回滚: RELEASE.md
+  - 参与开发:
+      - 开发与测试: development.md
+      - 常见问题: troubleshooting.md
+      - 路线图: roadmap.md
+plugins:
+  - search:
+      lang: [en]
+markdown_extensions:
+  - tables
+  - fenced_code
+  - toc:
+      permalink: true
+validation:
+  links:
+    not_found: warn
+    unrecognized_links: warn
+extra_css:
+  - stylesheets/extra.css

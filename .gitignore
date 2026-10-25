@@ -18,4 +18,6 @@ kubeconfig*
 release-output/
 __pycache__/
 *.pyc
+site/
+.venv-docs/
 !.mvn/wrapper/maven-wrapper.jar

@@ -1,0 +1,17 @@
+name: 功能建议
+description: 讨论业务需求或框架改进。
+title: "[Feature] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 业务场景与问题
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: 建议方案与替代方案
+      description: 包括影响的服务、兼容性和验证方式。
+    validations:
+      required: true

@@ -1,0 +1,24 @@
+name: Bug 报告
+description: 提交可复现的问题，请勿包含密码、令牌或个人数据。
+title: "[Bug] "
+body:
+  - type: textarea
+    id: environment
+    attributes:
+      label: 运行环境
+      description: 提交 SHA、运行模式、系统、JDK 版本。
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+      description: 最小复现步骤、输入和脱敏日志。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望与实际结果
+    validations:
+      required: true

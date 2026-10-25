@@ -7,7 +7,7 @@
 - `main`：稳定发布基线；本次上线配置和现有框架一并纳入版本管理。
 - `develop`：从这次 main 的提交创建，后续开发在此开展；功能较大时再从 develop 建 feature 分支。
 - 开发合并到 develop，集成验收后经 PR 合并 main；紧急修复合入 main 后同步 develop。
-- 当前仅初始化本地仓库，没有配置团队远端或推送。连接远端后将默认分支设置为 main，保护 main，禁止强推/删除，要求审核及 `verify` 检查通过。GitButler 自动创建的 `gb-local` 是本地管理远端，不是 GitHub/GitLab 远端。
+- 项目仓库为 [Akarin7784/selfmall](https://github.com/Akarin7784/selfmall)，默认分支为 main。维护者应保护 main，禁止强推/删除，要求审核及 `verify` 检查通过。GitButler 自动创建的 `gb-local` 是本地管理远端，不是 GitHub/GitLab 远端。
 
 仓库保护规则和 GitHub Environment 的审批人不能通过这些文件自动生效，管理员需在远端设置。不要直接在 main 上持续开发。
 
@@ -80,4 +80,4 @@ kubectl --context <明确的生产context> -n selfmall-prod get deployments,pods
 - 迁移应兼容旧应用；数据库损坏或不兼容变更时由负责人依据恢复演练和业务恢复点执行恢复，避免自动删库/逆向 SQL。
 - 保存发布日志、SBOM、扫描报告、验收报告和回滚结果；资源配额和探针阈值按压测结果调整。
 
-当前尚未提供真实生产参数、远端仓库和集群连接，也未实际发布/迁移/恢复；这些必须在真实环境完成。
+当前尚未提供真实生产参数和集群连接，也未实际发布/迁移/恢复；这些必须在真实环境完成。
