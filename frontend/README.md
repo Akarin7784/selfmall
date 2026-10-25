@@ -91,18 +91,20 @@ VITE_ENABLE_MOCK=true pnpm dev
 
 ## 页面与路由（FE-04）
 
-| 路由               | 页面     | 说明                                                                    |
-| ------------------ | -------- | ----------------------------------------------------------------------- |
-| `/`                | —        | 重定向到 `/products`                                                    |
-| `/products?page=N` | 商品列表 | `GET /api/products`，每页 20 条；`page` 从 1 开始，对应接口 `page=N-1`  |
-| `/products/:id`    | 商品详情 | `GET /api/products/{id}`；id 不是正整数时直接显示「商品不存在」不发请求 |
-| 其他               | 404      | 「页面不存在」并给回商品列表的链接                                      |
+| 路由               | 页面     | 说明                                                                       |
+| ------------------ | -------- | -------------------------------------------------------------------------- |
+| `/`                | —        | 重定向到 `/products`                                                       |
+| `/products?page=N` | 商品列表 | `GET /api/products`，每页 20 条；`page` 从 1 开始，对应接口 `page=N-1`     |
+| `/products/:id`    | 商品详情 | `GET /api/products/{id}`；id 不是正整数时直接显示「商品不存在」不发请求    |
+| `/login`           | 演示登录 | FE-05；`POST /api/auth/token`，支持 `?redirect=站内路径`；已登录访问会跳走 |
+| `/me`              | 我的     | FE-05；需要登录，显示登录状态、`memberId` 和「退出登录」                   |
+| 其他               | 404      | 「页面不存在」并给回商品列表的链接                                         |
 
 - 只展示接口已有的字段：`id`、`skuCode`、`name`、`price`。不展示库存、图片、描述、类目，图片位置是纯 CSS 占位块（`aria-hidden`）。没有「订单试算」入口（FE-06）。
 - 分页：接口不返回总数，只有「上一页 / 下一页」。返回条数 < 20 视为最后一页；正好 20 条时下一页可点，下一页为空显示「这一页没有商品了」空态。URL 页码非整数、< 1 或 > 10001（接口上限 10000）时自动改写到合法范围。
 - 价格：`displayPrice()` 用 `formatMoney` 规范为两位小数加「¥」（`99.00` → `¥99.00`，`1299.5` → `¥1299.50`），全程字符串；超过两位小数的非法金额原样展示，不舍入。
 - 数据层：`@tanstack/vue-query`，默认配置在 `src/api/query.ts`：network/timeout/server-error/service-unavailable 最多重试 1 次，其余（4xx、429、invalid-response）不重试；列表用 `keepPreviousData`，翻页时保留上一页内容直到新数据到达。
-- 客户端单例 `src/api/client.ts`（baseUrl `/api`），通过 `installApiClient(app)` provide，组件里 `useApiClient()` 获取；测试注入假客户端。`onUnauthorized` 暂为空实现，FE-05 接登录页时接线。
+- 客户端单例 `src/api/client.ts`（baseUrl `/api`），通过 `installApiClient(app)` provide，组件里 `useApiClient()` 获取；测试注入假客户端。`onUnauthorized` 在 FE-05 接线，见「登录与会话」。
 
 ### 状态与错误文案
 
@@ -126,6 +128,18 @@ VITE_ENABLE_MOCK=true pnpm dev
 ### 浏览器验收方式
 
 后端不在本机时，可在仓库外起一个临时桩服务，按 `docs/api.md` 的统一格式返回 `/api/products` 与 `/api/products/{id}`（含 404、503、429、慢响应），用 `VITE_API_PROXY_TARGET=http://localhost:<桩端口> pnpm dev` 启动，再用 Playwright 在 375px 与 1280px 下检查：`document.documentElement.scrollWidth <= innerWidth`、底部栏不遮挡内容、触控目标 >= 44px、各状态显示正确。桩服务与截图都不入库。
+
+## 登录与会话（FE-05）
+
+- **演示登录**：`/login` 只对接后端 local 模式的 `POST /api/auth/token`（demo 用户），走真实接口，**不 mock**；cloud 模式没有这个接口。页面标明「演示登录」，不是真实账号体系，不做注册、刷新令牌、角色、会员等级与积分。
+- **demo 密码**：由后端环境变量配置，**请向后端维护者索取**；代码和文档里不写密码，登录页不预填。
+- **令牌存储**：沿用 `@selfmall/api` 的 token store，只存 `localStorage`，key 为 `selfmall.accessToken`；不打日志。密码只在提交时传给接口，不存储、不进 Pinia、不进日志或错误信息。前端不解码 JWT，身份与权限以后端为准。
+- **会话 store**（`src/session/store.ts`，Pinia）：`isLoggedIn` 以 token store 为准，`login()`、`logout()`；退出清令牌并回到登录页。
+- **路由守卫**：`meta.requiresAuth` 的路由（目前只有 `/me`）未登录时跳 `/login?redirect=原页`，登录成功回原页；`redirect` 只接受站内路径（单个 `/` 开头，拒绝 `//`、反斜杠、协议、控制字符及其百分号编码形式，见 `src/session/redirect.ts`），非法时回 `/products`。已登录访问 `/login` 直接跳走。商品页保持公开。
+- **过期处理**：令牌有效期 3600 秒，没有刷新令牌。过期后受保护接口由网关返回 401，客户端先清令牌，再经 `onUnauthorized`（`src/api/client.ts` → `src/session/unauthorized.ts` → `App.vue`）同步会话并跳 `/login?redirect=当前路径&reason=expired`，登录页显示「登录已过期，请重新登录」（`role="status"`）。并发多个 401 只跳一次，已在登录页不重复跳。登录接口本身的 401（用户名或密码错误）不清令牌、不跳转。
+- **错误文案**：401 用户名或密码错误；400 请填写用户名和密码（前端也做空值校验）；429 尝试过于频繁，请 N 秒后重试（`Retry-After`）；网络/超时 网络异常，请检查网络后重试；5xx/503 登录服务暂时不可用；其他 登录失败。错误用 `role="alert"` + `aria-live` 播报并获得焦点。
+- **导航**：未登录时顶部导航和手机底部栏显示「登录」，已登录显示「我的」。
+- **mock 与登录**：`VITE_ENABLE_MOCK=true` 时 MSW 只拦商品接口，**登录请求仍经 Vite 代理到真实后端**（`VITE_API_PROXY_TARGET`，默认 `http://localhost:8080`）。本地没有起后端时，开了 mock 也登录不了（显示网络或服务错误），这是预期行为，不是页面坏了。
 
 ## 接口客户端 `@selfmall/api`
 
@@ -192,24 +206,9 @@ api.logout() // 清除本地令牌
 - 公开接口（含登录）的 401 只抛 `unauthorized`：登录密码错误不会清除已有令牌、也不会触发跳转。
 - 403 不清令牌。
 
-### onUnauthorized 接线（FE-05 落地，本 PR 不接页面）
+### onUnauthorized 接线
 
-storefront 目前没有登录页，接线放到 FE-05。建议在应用层创建单例：
-
-```ts
-// apps/storefront/src/api.ts
-import { createApiClient } from '@selfmall/api'
-import router from './router'
-
-export const api = createApiClient({
-  onUnauthorized: () => {
-    const current = router.currentRoute.value
-    if (current.name !== 'login') {
-      void router.replace({ name: 'login', query: { redirect: current.fullPath } })
-    }
-  },
-})
-```
+已在 FE-05 落地，见上文「登录与会话（FE-05）」。
 
 ### 金额规则
 

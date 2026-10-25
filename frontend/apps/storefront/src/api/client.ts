@@ -1,15 +1,15 @@
 import { inject, type App, type InjectionKey } from 'vue'
 import { API_BASE_PATH, createApiClient, type ApiClient } from '@selfmall/api'
+import { notifyUnauthorized } from '@/session/unauthorized'
 
 /**
  * 买家端接口客户端单例。baseUrl 固定为 `/api`（开发期由 Vite 代理转发到网关）。
- * onUnauthorized：FE-04 只有公开的商品接口，暂不处理；FE-05 接登录页时在这里接线跳转。
+ * onUnauthorized（FE-05）：受保护接口 401 或本地无令牌时，客户端已先清令牌；
+ * 这里通知应用层同步会话并跳转 `/login?redirect=当前路径`（见 App.vue）。
  */
 export const api: ApiClient = createApiClient({
   baseUrl: API_BASE_PATH,
-  onUnauthorized: () => {
-    // TODO(FE-05)：跳转登录页并带上 redirect。
-  },
+  onUnauthorized: () => notifyUnauthorized(),
 })
 
 export const API_CLIENT_KEY: InjectionKey<ApiClient> = Symbol('selfmall.apiClient')
