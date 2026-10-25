@@ -2,7 +2,7 @@
 
 买家端（H5 + PC Web 同一套响应式代码）与共享接口客户端。运营后台 `apps/admin`（Element Plus）在 FE-08 再建。
 
-> 当前进度：FE-01 工程骨架已合并；FE-03 实现 `@selfmall/api` 接口客户端。还没有业务页面（FE-04 起）。
+> 当前进度：FE-01 工程骨架、FE-03 `@selfmall/api` 接口客户端已合并；FE-04 实现买家端商品列表页与详情页。
 
 ## 目录结构
 
@@ -12,7 +12,9 @@ frontend/
 │   ├── public/mockServiceWorker.js   MSW 生成的 worker 脚本（勿手改）
 │   └── src/
 │       ├── mocks/          MSW 接线（browser.ts、handlers/），默认关闭
-│       ├── pages/          页面（目前只有占位首页）
+│       ├── api/            接口客户端单例、vue-query 默认配置、错误文案、价格展示
+│       ├── components/     通用组件（商品卡片、错误态）
+│       ├── pages/          页面（商品列表、商品详情、404）
 │       ├── router/         路由
 │       └── styles/         全局样式与断点
 ├── packages/api/           类型化接口客户端 @selfmall/api（见下文「接口客户端」）
@@ -62,8 +64,46 @@ VITE_API_PROXY_TARGET=http://localhost:8080
 | >= 768px        | 平板 |
 | >= 1200px       | PC   |
 
-- 验收宽度：375px 与 1280px，两者都要检查。浏览器实测随第一个业务页面放到 FE-04 做（FE-01/FE-03 没有页面可验）。
-- 导航：手机上收成底部栏或抽屉，平板/PC 用顶部导航。
+- 验收宽度：375px 与 1280px，两者都要检查（FE-04 起每个页面 PR 都要做）。
+- 导航：手机（< 768px）用固定底部栏，内容区底部留出栏高度；>= 768px 用顶部导航。
+
+## 页面与路由（FE-04）
+
+| 路由               | 页面     | 说明                                                                    |
+| ------------------ | -------- | ----------------------------------------------------------------------- |
+| `/`                | —        | 重定向到 `/products`                                                    |
+| `/products?page=N` | 商品列表 | `GET /api/products`，每页 20 条；`page` 从 1 开始，对应接口 `page=N-1`  |
+| `/products/:id`    | 商品详情 | `GET /api/products/{id}`；id 不是正整数时直接显示「商品不存在」不发请求 |
+| 其他               | 404      | 「页面不存在」并给回商品列表的链接                                      |
+
+- 只展示接口已有的字段：`id`、`skuCode`、`name`、`price`。不展示库存、图片、描述、类目，图片位置是纯 CSS 占位块（`aria-hidden`）。没有「订单试算」入口（FE-06）。
+- 分页：接口不返回总数，只有「上一页 / 下一页」。返回条数 < 20 视为最后一页；正好 20 条时下一页可点，下一页为空显示「这一页没有商品了」空态。URL 页码非整数、< 1 或 > 10001（接口上限 10000）时自动改写到合法范围。
+- 价格：`displayPrice()` 用 `formatMoney` 规范为两位小数加「¥」（`99.00` → `¥99.00`，`1299.5` → `¥1299.50`），全程字符串；超过两位小数的非法金额原样展示，不舍入。
+- 数据层：`@tanstack/vue-query`，默认配置在 `src/api/query.ts`：network/timeout/server-error/service-unavailable 最多重试 1 次，其余（4xx、429、invalid-response）不重试；列表用 `keepPreviousData`，翻页时保留上一页内容直到新数据到达。
+- 客户端单例 `src/api/client.ts`（baseUrl `/api`），通过 `installApiClient(app)` provide，组件里 `useApiClient()` 获取；测试注入假客户端。`onUnauthorized` 暂为空实现，FE-05 接登录页时接线。
+
+### 状态与错误文案
+
+| 状态                  | 表现                                                        |
+| --------------------- | ----------------------------------------------------------- |
+| 加载                  | 骨架屏，`aria-busy="true"`、`role="status"`                 |
+| 空                    | 「暂无商品」/「这一页没有商品了」，`role="status"`          |
+| `network` / `timeout` | 网络异常，请重试                                            |
+| `rate-limited`        | 请求过于频繁，请 N 秒后重试（N 由 `retryAfterMs` 向上取整） |
+| `service-unavailable` | 服务暂时不可用，请稍后重试                                  |
+| `server-error`        | 服务器出错了，请稍后重试                                    |
+| 其他                  | 加载失败，请重试                                            |
+| 详情 `not-found`      | 商品不存在或已下架 + 返回商品列表链接                       |
+
+错误态都是 `role="alert"` 并带「重试」按钮，不会用假数据兜底。
+
+### 无障碍
+
+`header` / `nav`（带 `aria-label`）/ `main` 地标与跳转链接；`document.title` 随路由更新（`商品列表 - SelfMall` 等）；导航当前项 `aria-current="page"`；路由切换后焦点移到页面 `h1`；卡片是链接，可 Tab 聚焦，全局 `:focus-visible` 描边；可点元素最小 44×44px。
+
+### 浏览器验收方式
+
+后端不在本机时，可在仓库外起一个临时桩服务，按 `docs/api.md` 的统一格式返回 `/api/products` 与 `/api/products/{id}`（含 404、503、429、慢响应），用 `VITE_API_PROXY_TARGET=http://localhost:<桩端口> pnpm dev` 启动，再用 Playwright 在 375px 与 1280px 下检查：`document.documentElement.scrollWidth <= innerWidth`、底部栏不遮挡内容、触控目标 >= 44px、各状态显示正确。桩服务与截图都不入库。
 
 ## 接口客户端 `@selfmall/api`
 

@@ -15,6 +15,7 @@
 - 前端 CI `.github/workflows/frontend-ci.yml`（FE-02）：仅在 `frontend/**` 变更时运行，依次执行 install（frozen lockfile）、lint、typecheck、test、build，构建时强制关闭 MSW 示例数据。
 - 网关跨域（CORS）支持：来源、方法、请求头、暴露头、预检缓存和凭据均可通过 `mall.gateway.cors.*` 配置，默认只允许本地前端 `5173` 端口，禁止 `*` 通配；开启凭据时任何 `*` 均拒绝启动（BE-CORS）。
 - 前端接口客户端 `@selfmall/api`（FE-03）：统一响应解包与 `ApiError` 错误分类（含非 JSON/框架错误、429 `Retry-After`）、401 清令牌回调、localStorage 令牌存储、金额无损解析与字符串金额工具。
+- 买家端商品列表页与详情页（FE-04）：对接 `GET /api/products`、`GET /api/products/{id}`，URL 页码上一页/下一页分页、加载/空/错误（按 `ApiError.kind` 分文案）/重试状态、404 页，手机底部栏与平板/PC 顶部导航的响应式布局，vue-query 数据层，不含示例数据。
 
 ### Known limitations
 
