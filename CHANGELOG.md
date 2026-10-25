@@ -11,6 +11,7 @@
 - local/cloud 配置、Kustomize dev/prod、Docker 镜像与发布验证流程。
 - 独立数据库迁移、运维和回滚文档。
 - MkDocs 文档站、开源贡献规范、Issue 模板和 MIT 许可证。
+- 前端工程骨架 `frontend/`（FE-01）：pnpm workspace、Vue 3 买家端占位、`@selfmall/api` 包骨架、ESLint/Prettier/Vitest 与 MSW 开关，不含业务页面。
 
 ### Known limitations
 
