@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.5.0</version>
+    <version>4.1.2</version>
     <relativePath />
   </parent>
   <groupId>com.selfmall</groupId>
@@ -14,8 +14,8 @@
   <name>SelfMall 自营电商</name>
   <properties>
     <java.version>21</java.version>
-    <spring-cloud.version>2025.0.0</spring-cloud.version>
-    <spring-cloud-alibaba.version>2025.0.0.0</spring-cloud-alibaba.version>
+    <spring-cloud.version>2025.1.4</spring-cloud.version>
+    <spring-cloud-alibaba.version>2025.1.0.0</spring-cloud-alibaba.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   <modules>
