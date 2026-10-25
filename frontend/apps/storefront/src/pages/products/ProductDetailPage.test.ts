@@ -14,7 +14,7 @@ describe('商品详情页', () => {
     expect(api.getProduct).toHaveBeenCalledWith(7)
   })
 
-  it('成功：展示 id、skuCode、name、价格，不展示库存/图片/描述/试算', async () => {
+  it('成功：展示 id、skuCode、name、价格，不展示库存/图片/描述/购物车', async () => {
     const api = createFakeApi()
     api.getProduct.mockResolvedValue({
       id: 7,
@@ -28,8 +28,9 @@ describe('商品详情页', () => {
     expect(wrapper.get('[data-test="id"]').text()).toBe('7')
     expect(wrapper.get('[data-test="sku"]').text()).toBe('KB-007')
     expect(wrapper.get('[data-test="price"]').text()).toBe('¥1299.50')
-    const text = wrapper.text()
-    for (const word of ['库存', '描述', '类目', '试算', '购物车']) expect(text).not.toContain(word)
+    // 商品信息区不展示库存等字段（试算区说明里的「不预占库存」不算）
+    const text = wrapper.get('[data-test="product-detail"]').text()
+    for (const word of ['库存', '描述', '类目', '购物车', '下单']) expect(text).not.toContain(word)
     expect(wrapper.find('img').exists()).toBe(false)
     expect(wrapper.find('.placeholder').attributes('aria-hidden')).toBe('true')
   })

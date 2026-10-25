@@ -183,7 +183,9 @@ describe('验收 3：令牌只存 tokenStore、不泄露', () => {
       if (call.url.includes('/products')) return ok('[]')
       return ok('{"memberId":"10001"}')
     }, null)
-    await expect(client.login({ username: 'demo', password: 'demo123456' })).resolves.toEqual({
+    await expect(
+      client.login({ username: 'demo', password: 'not-a-real-password' }),
+    ).resolves.toEqual({
       accessToken: TOKEN,
       tokenType: 'Bearer',
       expiresIn: 3600,
