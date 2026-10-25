@@ -17,6 +17,7 @@
 - 前端接口客户端 `@selfmall/api`（FE-03）：统一响应解包与 `ApiError` 错误分类（含非 JSON/框架错误、429 `Retry-After`）、401 清令牌回调、localStorage 令牌存储、金额无损解析与字符串金额工具。
 - 买家端商品列表页与详情页（FE-04）：对接 `GET /api/products`、`GET /api/products/{id}`，URL 页码上一页/下一页分页、加载/空/错误（按 `ApiError.kind` 分文案）/重试状态、404 页，手机底部栏与平板/PC 顶部导航的响应式布局，vue-query 数据层，不含示例数据。
 - 买家端电脑配件示例数据（FE-09）：MSW mock `GET /api/products` 与 `GET /api/products/{id}`，27 条 9 类通用名称示例商品（非真实商品与价格），只含 `id/skuCode/name/price`；响应带 `X-Mock: true`，列表页与详情页显示「MOCK 数据」徽标；`VITE_ENABLE_MOCK=true` 才开启，默认关闭，CI 与生产构建不包含。
+- 买家端登录与会话（FE-05）：`/login` 演示登录页对接 `POST /api/auth/token`（按 `ApiError.kind` 分错误文案、前端空值校验、无障碍播报），令牌沿用 `selfmall.accessToken`，Pinia 会话 store，登录态路由守卫与站内 `redirect` 白名单，需要登录的「我的」页 `/me` 与退出，`onUnauthorized` 接线（401 过期跳登录并回原页，并发去重），导航「登录/我的」入口；不含注册、刷新令牌与角色。
 
 ### Known limitations
 
